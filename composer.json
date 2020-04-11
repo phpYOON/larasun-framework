@@ -1,0 +1,20 @@
+{
+  "name": "larasun/framework",
+  "description": "",
+  "type": "library",
+  "license": "MIT",
+  "minimum-stability": "dev",
+  "require": {
+    "php": "^7.2.5",
+    "vlucas/phpdotenv": "^4.0"
+  },
+  "autoload": {
+    "files": [
+      "src/Illuminate/Foundation/helpers.php"
+    ],
+    "psr-4": {
+      "Illuminate\\": "src/illuminate/"
+    }
+  }
+}
+
