@@ -2,6 +2,7 @@
 namespace Illuminate\Foundation;
 
 use Illuminate\Container\Container;
+use Illuminate\Foundation\Bootstrap\RegisterProviders;
 
 class Application extends Container
 {
@@ -10,7 +11,6 @@ class Application extends Container
     public function __construct($basePath = null)
     {
         $this->setBasePath($basePath);
-
     }
 
     public function setBasePath($basePath)
@@ -23,18 +23,29 @@ class Application extends Container
         return $this->basePath;
     }
 
-
-    public function boot_Kernel_ServiceProviders()
+    public function configDiretoryPath($path = '')
     {
-        //$bootKernel = new BootKernelServiceProviders();
-        //$bootKernel->booting($this);
+        return $this->basePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
     }
 
-    public function boot_Module_ServiceProviders()
+    /*===================================================================================*/
+    /*
+     * 서비스 프로바이더 구동
+     */
+    public function bootstrapWith($app, $bootstrappers)
     {
-        //$bootModule =new BootModuleServiceProviders();
-        //$bootModule->booting($this);
+        foreach($bootstrappers as $bootstrapper)
+        {
+            parent::bind($bootstrapper);
+            parent::make($bootstrapper)->bootstrap($this);
+        }
     }
+
+
+    /*===================================================================================*/
+
+    /*===================================================================================*/
+
 
 
 }

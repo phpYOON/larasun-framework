@@ -5,110 +5,46 @@ use Illuminate\Http\Request;
 
 class Route
 {
-    public static $method;
-    public static $uri;
-    public static $action;
+    protected $request;
+    protected $path;
+    protected $action;
 
-    public static $namespace = "\\App\\Http\\Controllers\\";
-    public static $controller;
+    protected $arr = [ 'GET'=>[], 'POST'=>[] ];
+    protected $url;
+    protected $method;
+    protected $matched_route;
 
-
-    protected static $arr = [ 'GET'=>[], 'POST'=>[] ];
-
-    protected static $matched_route;
-
-    public static function init(Request $r)
+    public function __construct($path, $action, Request $request)
     {
-        self::$method = $r->getMethod();
-        self::$uri = $r->getUrl();
+        $this->request = $request;
+        $this->path = $path;
+        $this->action = $action;
+        $this->url = $request->getUrl();
+        $this->method = $request->getMethod();
     }
 
-    /*
-     * HTTTP GET 메서드 임
-     */
-    public static function get($uri, $action)
+    public function execute()
     {
-        // 클로저 함수면
-        if( is_callable($action) )
+        if( $this->request->getMethod() == 'GET' )
         {
-            $callback = $action;
-            self::$arr['GET'][$uri] = $callback;
-        }// 콘트롤러 액션 스트링 이면
-        else
-        {
-            $array = explode('@', $action);
-            self::$controller = $array[0];
-            self::$action = $array[1];
-            self::$arr['GET'][$uri] = "";
+            $this->get($this->path, $this->action);
         }
 
-    }
-
-    public static function run()
-    {
-        self::match()->callAction();
-
-    }
-
-
-    public static function match()
-    {
-        //dd($this->uri);
-        self::$matched_route = self::$arr[self::$method][self::$uri];
-
-        return new static();
-    }
-
-    public static function callAction()
-    {
-        if( is_callable(self::$matched_route) )
+        else if ( $this->request->getMethod() == 'POST' )
         {
-            $callable = self::$matched_route;
-            return $callable();
-        }
-        else
-        {
-            $namespace_and_controller_name = self::$namespace . self::$controller;
-            $action_name = self::$action;
 
-            $newController = new $namespace_and_controller_name();
-            $newController->$action_name();
         }
     }
 
-
-    /*=============================================================================================*/
-    public static function getMethod()
+    public function get($path, $action)
     {
-        return self::$method;
+
     }
 
-    public static function getUri()
+    public function post()
     {
-        return self::$uri;
+
     }
-    /*=============================================================================================*/
-    public static function getController()
-    {
-        return self::$controller;
-    }
-
-    public static function getControllerMethod()
-    {
-        return "";
-    }
-
-    public static function middleware($middleware = null)
-    {
-        self::$action['middleware'] = $middleware;
-
-        //dd( $this->action['middleware'] );
-
-        return self;
-    }
-
-
-
 
 
 }

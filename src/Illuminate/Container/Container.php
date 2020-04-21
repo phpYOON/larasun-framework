@@ -7,16 +7,9 @@ use ReflectionClass;
 
 class Container implements ContainerContract
 {
-    protected static $instance;
-    protected $instances = [];
     protected $bindings = [];
-
-
-    public static function setInstance(ContainerContract $container = null)
-    {
-        return static::$instance = $container;
-    }
-
+    protected $instances = [];
+    
     public function singleton($abstract, $concrete = null)
     {
         $this->bind($abstract, $concrete, true);
@@ -27,12 +20,10 @@ class Container implements ContainerContract
      *************/
     public function bind($abstract, $concrete = null, $shared = false)
     {
-
-        if( is_null($concrete) )
+        if( !isset($concrete) )
         {
             $concrete = $abstract;
         }
-
         $this->bindings[$abstract]['concrete'] = $concrete;
         $this->bindings[$abstract]['shared'] = $shared;
     }
@@ -48,30 +39,37 @@ class Container implements ContainerContract
      *************/
     public function resolve($abstract, $parameters = [] )
     {
-        // 객체가 배열에 저장되어 있는지 확인
-        if( isset($this->instances[$abstract]) )
+        //싱글톤이면
+        if( $this->bindings[$abstract]['shared'] === true )
         {
-            return $this->instances[$abstract];
-        }
+            if( isset($this->instances[$abstract]) )
+            {
+                return $this->instances[$abstract];
+            }
+            $object = $this->instances[$abstract] = $this->build($abstract);
 
-        $object = $this->returnNewConcrete_and_DI($abstract);
-
-        if( $this->isShared($abstract) )
+        }//팩토리패턴이면
+        else if( $this->bindings[$abstract]['shared'] === false )
         {
-            $this->instances[$abstract] = $object;
+            $object = $this->build($abstract);
         }
 
         return $object;
     }
+
     /****************
      * 4. build
      *************/
-    public function returnNewConcrete_and_DI($abstract)
+    public function build($abstract)
     {
         $concrete = $this->bindings[$abstract]['concrete'];
 
-        $reflector = new ReflectionClass($concrete);
+        if($abstract == $concrete)
+        {
+            return new $concrete();
+        }
 
+        $reflector = new ReflectionClass($concrete);
 
         if( is_null( $reflector->getConstructor() ) )
         {
@@ -98,6 +96,8 @@ class Container implements ContainerContract
 
 
 
+
+
     public function resolveClass($dependency)
     {
         $dependency_class = $dependency->getClass()->name;
@@ -105,12 +105,7 @@ class Container implements ContainerContract
     }
 
 
-    public function isShared($abstract)
-    {
-        return isset($this->instances[$abstract]) ||
-            (isset($this->bindings[$abstract]['shared']) &&
-                $this->bindings[$abstract]['shared'] === true);
-    }
+
 
 
 
